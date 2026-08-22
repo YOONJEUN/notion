@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진행 상황</title>
+
+<style>
+    :root {
+        --purple: #5146e5;
+        --purple-light: #7169f0;
+        --orange: #f0a000;
+        --red: #ff4b55;
+        --text: #202124;
+        --subtext: #666b73;
+        --line: #e8e9ed;
+        --track: #f1f2f4;
+        --card: #ffffff;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+    }
+
+    body {
+        background: #f7f7f8;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Noto Sans KR",
+            "Apple SD Gothic Neo",
+            Arial,
+            sans-serif;
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 360px;
+        background: var(--card);
+        border: 1px solid #e7e7e9;
+        border-radius: 18px;
+        padding: 28px 24px 24px;
+        box-shadow: 0 7px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .title {
+        text-align: center;
+        font-size: 23px;
+        font-weight: 750;
+        letter-spacing: -0.8px;
+        margin: 0 0 24px;
+    }
+
+    /* 진행률 */
+    .progress-percent {
+        text-align: center;
+        font-size: 42px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -1.8px;
+        color: var(--purple);
+        margin-bottom: 18px;
+    }
+
+    .progress-track {
+        position: relative;
+        width: 100%;
+        height: 31px;
+        padding: 4px;
+        border: 3px solid var(--purple);
+        border-radius: 999px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        overflow: hidden;
+        background:
+            repeating-linear-gradient(
+                -55deg,
+                #5146e5 0px,
+                #5146e5 13px,
+                #726bf0 13px,
+                #726bf0 25px
+            );
+        transition: width 0.6s ease;
+    }
+
+    .progress-track::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 999px;
+        pointer-events: none;
+        background:
+            repeating-linear-gradient(
+                -55deg,
+                rgba(255,255,255,0.18) 0px,
+                rgba(255,255,255,0.18) 13px,
+                transparent 13px,
+                transparent 25px
+            );
+    }
+
+    /* 정보 영역 */
+    .info {
+        margin-top: 27px;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+        border-bottom: 1px solid var(--line);
+        gap: 14px;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .icon {
+        width: 27px;
+        min-width: 27px;
+        height: 27px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .calendar {
+        color: var(--purple);
+    }
+
+    .hourglass {
+        color: var(--orange);
+        font-size: 24px;
+    }
+
+    .clock {
+        color: var(--red);
+    }
+
+    .flag {
+        color: #7d828a;
+    }
+
+    .info-text {
+        font-size: 14px;
+        color: var(--text);
+        letter-spacing: -0.2px;
+        white-space: nowrap;
+    }
+
+    .number {
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    .muted {
+        color: var(--subtext);
+        font-weight: 500;
+    }
+
+    .remaining {
+        color: var(--orange);
+        font-weight: 750;
+    }
+
+    .date {
+        color: #555a62;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 17px;
+        color: #8a8e95;
+        font-size: 11px;
+    }
+
+    @media (max-width: 340px) {
+        .card {
+            padding: 24px 18px 20px;
+        }
+
+        .progress-percent {
+            font-size: 38px;
+        }
+
+        .info-text {
+            font-size: 13px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1 class="title">진행 상황</h1>
+
+    <div class="progress-percent" id="progressPercent">0.0%</div>
+
+    <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="info">
+
+        <div class="info-row">
+            <div class="icon calendar">▣</div>
+            <div class="info-text">
+                <span class="number" id="elapsedDays">0</span>
+                <span class="muted"> / </span>
+                <span class="muted" id="totalDays">0</span><span class="muted">일</span>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <div class="icon hourglass">⌛</div>
+            <div class="info-text">
+                <span class="remaining" id="remainingDays">0일</span>
+                <span> 남음</span>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <div class="icon clock">◷</div>
+            <div class="info-text">
+                오늘 : <span class="date" id="today">0000.00.00</span>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <div class="icon flag">⚑</div>
+            <div class="info-text date">
+                2026.07.24 → 2026.12.23
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        매일 자동으로 진행률이 업데이트됩니다.
+    </div>
+
+</div>
+
+<script>
+    // ==========================================
+    // 프로젝트 기간 — 고정값
+    // ==========================================
+    const START_DATE = new Date(2026, 6, 24);  // 2026.07.24
+    const END_DATE   = new Date(2026, 11, 23); // 2026.12.23
+
+    function dateOnly(date) {
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+        );
+    }
+
+    function dayDifference(start, end) {
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.round((dateOnly(end) - dateOnly(start)) / oneDay);
+    }
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}.${month}.${day}`;
+    }
+
+    function updateProgress() {
+        const today = dateOnly(new Date());
+
+        const totalDays = dayDifference(START_DATE, END_DATE);
+        const elapsedRaw = dayDifference(START_DATE, today);
+
+        // 프로젝트 시작 전에는 0일,
+        // 종료 후에는 전체 기간으로 고정
+        const elapsedDays = Math.max(
+            0,
+            Math.min(totalDays, elapsedRaw)
+        );
+
+        const remainingDays = Math.max(
+            0,
+            totalDays - elapsedDays
+        );
+
+        const progress = totalDays === 0
+            ? 100
+            : (elapsedDays / totalDays) * 100;
+
+        document.getElementById("progressPercent").textContent =
+            `${progress.toFixed(1)}%`;
+
+        document.getElementById("progressFill").style.width =
+            `${progress}%`;
+
+        document.getElementById("elapsedDays").textContent =
+            elapsedDays;
+
+        document.getElementById("totalDays").textContent =
+            totalDays;
+
+        document.getElementById("remainingDays").textContent =
+            `${remainingDays}일`;
+
+        document.getElementById("today").textContent =
+            formatDate(today);
+    }
+
+    updateProgress();
+
+    // 날짜가 넘어가면 자동으로 다시 계산
+    setInterval(updateProgress, 60 * 1000);
+</script>
+
+</body>
+</html>
